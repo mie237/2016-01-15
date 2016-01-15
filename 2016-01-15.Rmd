@@ -1,0 +1,101 @@
+---
+title: 'MIE237'
+author: "Neil Montgomery"
+date: "2016-01-15"
+output: 
+  ioslides_presentation: 
+    css: '../../../styles.css' 
+    widescreen: true 
+    transition: 0.001
+---
+\newcommand{\Var}[1]{\text{Var}\left( #1 \right)}
+\newcommand{\E}[1]{E\left( #1 \right)}
+\newcommand{\Sample}[1]{#1_1,\ldots,#1_n}
+\newcommand{\od}[2]{\overline #1_{#2\cdot}}
+
+# Inference with two independent numerical samples (9.8 and 10.5) continued...
+
+## "Key fact" equal variance version
+
+ Key fact: $$\frac{\left(\od{Y}{1} - \od{Y}{2}\right)
+- \left(\mu_1 - \mu_2\right)}{
+ S_p\sqrt{\frac{1}{n_1} + \frac{1}{n_2}
+}} \sim t_{n_1 + n_2 - 2}$$
+
+## 9.40 continues
+
+```{r}
+library(rio)
+nitro <- import("Ex09.40.txt")
+t.test(nitro$NoNitrogen, nitro$Nitrogen, var.equal = TRUE)
+```
+
+## 9.40 with data in "real" form
+
+```{r}
+library(tidyr)
+nitro_tidy <- gather(nitro, treatment, weight)
+```
+
+
+## Side-by-side boxplots (only n=10 each!)
+```{r}
+library(dplyr)
+library(ggplot2)
+nitro_tidy %>% 
+  ggplot(aes(y=weight, x=treatment)) + geom_boxplot()
+```
+
+## Summaries
+
+```{r, message=FALSE}
+nitro_tidy %>% 
+  group_by(treatment) %>% 
+  summarize(n(), mean(weight), sd(weight))
+```
+
+## `t.test` again
+
+```{r}
+nitro_tidy %>% 
+  t.test(weight ~ treatment, data=., var.equal = TRUE) -> nitro_t
+nitro_t
+```
+
+Note: `weight ~ treatment` is called a *formula* in R.
+
+## Details for hand calculation
+
+```{r, echo=FALSE}
+nitro_tidy %>% 
+  group_by(treatment) %>% 
+  summarize(n=n(), mean=mean(weight), sd=sd(weight)) -> nitro_summ
+nitro_summ
+```
+
+$s_p = `r sqrt(sum(nitro_summ$sd^2*(nitro_summ$n - 1))/sum(nitro_summ$n - 2))`$
+
+$\sqrt{\frac{1}{n_1} + \frac{1}{n_2}} = `r sqrt(sum(1/nitro_summ$n))`$
+
+$t_{18, 0.025} = `r qt(0.025, sum(nitro_summ$n-1))`$
+
+$P(t_{18} < `r nitro_t$statistic`) = `r pt(nitro_t$statistic, nitro_t$parameter)`$
+
+## "Key Fact" no equal variance assumption
+
+> Key fact(actually an approximation): $$\frac{\left(\od{Y}{1} - \od{Y}{2}\right)
+- \left(\mu_1 - \mu_2\right)}{
+\sqrt{\frac{S_1^2}{n_1} + \frac{S_2^2}{n_2}
+}} \sim t_\nu$$
+
+> with: $$\nu = \frac{\left(\frac{S^2_1}{n_1} + \frac{S^2_2}{n_2}\right)^2}
+{\frac{\left(\frac{S^2_1}{n_1}\right)^2}{n_1-1} +
+\frac{\left(\frac{S^2_2}{n_2}\right)^2}{n_2-1}}$$
+
+## 9.40 revisited
+
+```{r}
+nitro_tidy %>% 
+  t.test(weight ~ treatment, data = .)
+```
+
