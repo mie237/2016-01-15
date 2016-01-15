@@ -39,7 +39,7 @@ nitro_tidy <- gather(nitro, treatment, weight)
 
 
 ## Side-by-side boxplots (only n=10 each!)
-```{r}
+```{r, message=FALSE}
 library(dplyr)
 library(ggplot2)
 nitro_tidy %>% 
@@ -51,7 +51,7 @@ nitro_tidy %>%
 ```{r, message=FALSE}
 nitro_tidy %>% 
   group_by(treatment) %>% 
-  summarize(n(), mean(weight), sd(weight))
+  summarize(n(), mean(weight), sd(weight), var(weight))
 ```
 
 ## `t.test` again
